@@ -15,7 +15,10 @@ Next.js application for community ideas, projects, and policy proposals.
 ## Implemented
 - Public landing page, proposal listing and detail pages
 - Authenticated proposal submission and personal submission list
-- Admin proposal queue and controlled status transitions
+- Admin proposal queue, reviewer assignment, controlled status transitions, and audit history
+- Category CRUD with 15 seeded community categories
+- Reporting dashboard by proposal status and category
+- Proposal editing for drafts and proposals returned for revision
 - Transactional status history and audit log
 - PostgreSQL schema for users, roles, departments, categories, proposals, comments, supporters, and audit events
 - Public JSON API and health endpoint
@@ -35,9 +38,10 @@ Never commit .env.local or production credentials. The read-only Upstash token i
 2. Start local PostgreSQL: docker compose up -d.
 3. Configure .env.local. For local PostgreSQL, set DATABASE_URL and DATABASE_URL_POOLED to your local connection string. Upstash REST credentials are still needed for rate limiting.
 4. Install dependencies: npm install.
-5. Generate migrations: npm run db:generate.
-6. Apply migrations: npm run db:migrate.
-7. Start Next.js: npm run dev.
+5. Apply the committed migration: npm run db:migrate.
+6. Start Next.js: npm run dev.
+
+Vercel uses `vercel-build` to apply Drizzle migrations before building. Set direct `DATABASE_URL` for migrations and pooled `DATABASE_URL_POOLED` for runtime.
 
 ## First administrator
 The account must sign in once with an enabled OAuth provider. Then run from a trusted operator environment:
