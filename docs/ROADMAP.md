@@ -1,18 +1,27 @@
-# Implementation Roadmap
+# Development Roadmap
 
-1. Foundation: Next.js/TypeScript, Bootstrap 5, Drizzle, PostgreSQL, Redis, config validation, CI.
-2. Identity: Auth.js or shared Keycloak OIDC, five OAuth providers, profiles, account linking, super-admin bootstrap, RBAC tests.
-3. Submission lifecycle: drafts, form validation, categories/barangays/departments, external URLs, S3 uploads/scanning.
-4. Public portal: browse, search/filter, details, status legends/timeline, project and policy views, accessibility.
-5. Admin: queues, reviewer assignment, rubric, revision requests, status workflow, internal notes, responses, audit log.
-6. Community: endorsements, moderated comments, milestones, notifications.
-7. Operations: CSV/PDF reports, encrypted scheduled backups, restore tests, observability, production readiness.
+## Phase 1 — Core portal
+- Next.js App Router and responsive public portal
+- Auth.js OAuth login
+- PostgreSQL schema and Drizzle migrations
+- Upstash Redis rate limiting
+- Proposal submission, public browsing, status tracking
+- Administrator review and audit history
 
-## Definition of done
-- Authorization tests for every protected route.
-- Transactional, auditable status transitions.
-- No leakage of drafts, private attachments, or contact data.
-- OAuth/S3 secrets absent from client bundles and source control.
-- Upload validation and malware scanning enforced.
-- Repeatable migrations and CI for lint/typecheck/tests/build.
-- Successful documented backup restoration test.
+## Phase 2 — Governance and operations
+- Department and category management
+- Reviewer assignment and role-scoped queues
+- Draft editing and revision requests
+- Email notifications and notification preferences
+- Search, filters, pagination, and reporting
+- OpenAPI completion and Swagger UI
+- Integration and end-to-end tests
+
+## Final phase — Media and attachments
+- S3-compatible object storage integration
+- Image and document upload UI
+- Presigned upload and server-side finalize workflow
+- Attachment metadata and access control
+- File type/size validation, malware scanning, retention and deletion policies
+
+Uploads and attachments are intentionally deferred until the core portal and review workflows are stable.

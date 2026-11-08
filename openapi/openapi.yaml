@@ -2,7 +2,7 @@ openapi: 3.0.3
 info:
   title: BetterSipocot Ideas API
   version: 1.0.0
-  description: Public proposal discovery API and authenticated upload workflow.
+  description: Public proposal discovery API.
 servers:
   - url: https://ideas.bettersipocot.org/api/v1
 paths:
@@ -12,7 +12,10 @@ paths:
       parameters:
         - in: query
           name: q
-          schema: { type: string, maxLength: 100 }
+          schema:
+            type: string
+            maxLength: 100
+          description: Search proposal titles.
       responses:
         "200":
           description: Public proposals
@@ -33,29 +36,3 @@ paths:
                         type: { type: string }
                         status: { type: string }
                         createdAt: { type: string, format: date-time }
-  /uploads/presign:
-    post:
-      summary: Create a short-lived S3-compatible upload URL
-      security:
-        - sessionCookie: []
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              required: [filename, contentType, size]
-              properties:
-                filename: { type: string, maxLength: 180 }
-                contentType: { type: string, enum: [application/pdf, image/jpeg, image/png, image/webp] }
-                size: { type: integer, minimum: 1 }
-      responses:
-        "200": { description: Presigned upload URL }
-        "401": { description: Authentication required }
-        "429": { description: Rate limit exceeded }
-components:
-  securitySchemes:
-    sessionCookie:
-      type: apiKey
-      in: cookie
-      name: authjs.session-token

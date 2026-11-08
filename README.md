@@ -1,67 +1,71 @@
 # BetterSipocot Ideas Portal
 
-Next.js application scaffold for community ideas, projects, and policy proposals.
+Next.js application for community ideas, projects, and policy proposals.
 
-**Domain:** https://ideas.bettersipocot.org
+**Repository:** https://github.com/sipocot-dev/idea  
+**Planned domain:** https://ideas.bettersipocot.org
 
-## Included
-- Next.js App Router + TypeScript + Bootstrap 5
+## Stack
+- Next.js App Router, TypeScript, Bootstrap 5
 - Auth.js OAuth providers: Google, GitHub, Microsoft Entra ID, Facebook, X
-- PostgreSQL + Drizzle schema and migration configuration
-- Redis rate limiting
-- S3-compatible presigned upload URL endpoint
-- Public proposal list, detail pages, submission form, and user submissions
-- Admin proposal queue with validated status transitions and transactional audit history
-- Public JSON API, health endpoint, Docker Compose dependencies, Dockerfile, CI workflow
-- Secure super-admin bootstrap command
+- Prisma Postgres with Drizzle ORM
+- Upstash Redis REST API for rate limiting
+- File storage, images, and attachments are deferred to the final feature milestone
 
-## Quick start
-1. Install Node.js 22 and Docker Compose.
-2. Copy .env.example to .env.local. Configure AUTH_SECRET, DATABASE_URL, REDIS_URL, and at least one OAuth provider.
-3. Start dependencies: docker compose up -d.
+## Implemented
+- Public landing page, proposal listing and detail pages
+- Authenticated proposal submission and personal submission list
+- Admin proposal queue and controlled status transitions
+- Transactional status history and audit log
+- PostgreSQL schema for users, roles, departments, categories, proposals, comments, supporters, and audit events
+- Public JSON API and health endpoint
+- Dockerfile, local PostgreSQL Compose service, Kubernetes manifests, and CI workflow
+
+## Environment setup
+Copy .env.example to .env.local and configure:
+- AUTH_SECRET and AUTH_URL
+- DATABASE_URL (direct Prisma Postgres connection, used by Drizzle migrations)
+- DATABASE_URL_POOLED (pooled Prisma Postgres connection, used by the app)
+- KV_REST_API_URL and KV_REST_API_TOKEN (Upstash Redis REST)
+
+Never commit .env.local or production credentials. The read-only Upstash token is not suitable for rate-limit counters; use the write token server-side.
+
+## Local development
+1. Install Node.js 22.
+2. Start local PostgreSQL: docker compose up -d.
+3. Configure .env.local. For local PostgreSQL, set DATABASE_URL and DATABASE_URL_POOLED to your local connection string. Upstash REST credentials are still needed for rate limiting.
 4. Install dependencies: npm install.
-5. Generate and apply database migrations: npm run db:generate then npm run db:migrate.
-6. Start the app: npm run dev.
-7. Open http://localhost:3000.
-
-The local Compose PostgreSQL password is for development only.
+5. Generate migrations: npm run db:generate.
+6. Apply migrations: npm run db:migrate.
+7. Start Next.js: npm run dev.
 
 ## First administrator
-The account must sign in once using an enabled provider. Then run:
+The account must sign in once with an enabled OAuth provider. Then run from a trusted operator environment:
 npm run admin:grant -- admin@example.com
 
-Run this only from a trusted operator environment with database access. No public admin signup exists.
+There is no public administrator registration.
 
-## OAuth setup
-Register callback URLs at each provider:
+## OAuth callback URLs
 https://ideas.bettersipocot.org/api/auth/callback/{provider}
-For local development use http://localhost:3000/api/auth/callback/{provider}.
+Local: http://localhost:3000/api/auth/callback/{provider}
+
 Provider IDs: google, github, microsoft-entra-id, facebook, twitter.
 
-## Storage
-Configure S3 endpoint, bucket, region, and credentials in server-side environment variables. The presign API currently accepts PDF/JPEG/PNG/WebP up to S3_MAX_UPLOAD_BYTES. Use a private bucket, restricted CORS, malware scanning, and a server-side finalize/metadata workflow before production use.
-
-## Commands
-- npm run dev — development
-- npm run typecheck — TypeScript
-- npm run lint — ESLint
-- npm run build — production build
-- npm run db:generate — generate migrations
-- npm run db:migrate — apply migrations
-- npm run admin:grant -- email — grant super-admin
-
 ## Routes
-- / public landing page and aggregate counts
-- /ideas public proposal list
-- /ideas/[slug] public proposal detail and status history
-- /submit authenticated proposal form
-- /my-ideas authenticated user's submissions
-- /admin administrator proposal queue
-- /api/v1/ideas public JSON API
-- /api/v1/uploads/presign authenticated upload URL endpoint
-- /api/health database health check
+- / — public landing page and proposal counters
+- /ideas — public proposal list and search
+- /ideas/[slug] — proposal detail and public status history
+- /submit — authenticated proposal submission
+- /my-ideas — current user's submissions
+- /admin — administrator review queue
+- /api/v1/ideas — public JSON endpoint
+- /api/health — PostgreSQL health check
 
-## Production hardening still required
-This is an initial application scaffold, not a finished production service. Before public launch, complete and test: file upload finalization and malware scanning; attachment metadata persistence; draft editing; reviewer/department assignment UI; email notifications; comments/endorsements; full Swagger UI; pagination and richer filters; security headers; rate-limit policy; integration/e2e tests; backup/restore drills; provider-specific OAuth verification; and accessibility review.
+## Database connection policy
+Use DATABASE_URL_POOLED for normal Next.js runtime traffic on Vercel/serverless. Use DATABASE_URL (direct connection) for schema migration and Drizzle Kit operations. Do not expose either connection string to client-side code.
 
-See docs/PRODUCT.md, docs/ARCHITECTURE.md, docs/DATA-MODEL.md, docs/API.md, docs/SECURITY-OPERATIONS.md, and docs/ROADMAP.md.
+## Deferred final milestone
+S3-compatible object storage, image uploads, attachments, presigned upload endpoints, attachment metadata, malware scanning, and related UI are intentionally excluded for now. Add them as a separately tested final feature after the core proposal workflow is complete.
+
+## Production checklist
+Before launch: configure OAuth credentials, rotate any credentials that have been shared, run and verify Drizzle migrations, add automated integration/e2e tests, review security headers and rate limits, test database backup/restore, and verify the Vercel environment variables.
