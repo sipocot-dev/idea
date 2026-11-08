@@ -1,140 +1,63 @@
 # Product Requirements
 
-## Product overview
+## Purpose and audiences
+A civic engagement platform, not just a suggestion box. Residents, students, educators, civic groups, businesses, developers, and local organizations can propose initiatives. Departments evaluate proposals, publish responses, and report implementation progress.
 
-The BetterSipocot Ideas Portal is a public civic participation service. It is more than a suggestion box: submissions move through a defined review process, responsible departments can respond, and the public can follow approved project progress.
-
-## Audiences
-
-- Residents and community groups
-- Students, educators, and researchers
-- Local organizations and businesses
-- Developers and open-source contributors
-- Department reviewers and evaluators
-- System administrators and auditors
-
-## Public navigation
-
-- Overview
-- Browse Ideas
-- Projects
-- Policy Proposals
-- Submit an Idea
-- How It Works
-- About
+## Public pages
+Overview, Browse Ideas, Projects, Policy Proposals, Submit an Idea, How It Works, About.
 
 ## Submission form
+### Basic
+- Title; proposal type (idea, community project, policy proposal, other); category
+- Executive summary and detailed description
+- Problem statement, proposed solution, expected benefits
 
-### Basic information
-- Title
-- Proposal type: idea, community project, policy proposal, or other
-- Category
-- Executive summary
-- Detailed description
-- Problem statement
-- Proposed solution
-- Expected benefits
+### Project details
+- One or more target barangays
+- Target beneficiaries; responsible department (optional)
+- Estimated budget and currency (optional)
+- Proposed timeline; user-suggested priority
 
-### Project information
-- Target barangay (optional; support multiple barangays)
-- Target beneficiaries
-- Responsible department (optional)
-- Estimated budget (optional, with currency)
-- Proposed timeline
-- Priority (low, normal, high; user-suggested only)
+### Links and attachments
+Accept multiple typed URLs: GitHub repository, GitHub organization, live demo, project website, documentation, other reference. Accept PDF/images/documents through secure S3 presigned uploads. Validate URL syntax and file content; never execute linked content. Draft save/resume is supported.
 
-### Supporting links
-Allow multiple typed links:
-- GitHub repository
-- GitHub organization
-- Live demo
-- Project website
-- Documentation
-- Other reference
-
-Validate URLs and display them as external links. Do not automatically trust or execute content from linked repositories.
-
-### Attachments
-Support PDF and common image/document formats with configurable size limits, content-type checks, malware scanning, and private-by-default storage.
-
-### Additional questions
-- Is the proposal open source?
-- Is collaboration welcome?
-- Is the proposer willing to participate in implementation?
-- Additional comments
-
-Users can save drafts and submit later. On submission, capture an immutable submitted snapshot or otherwise preserve the submitted version for audit.
+### Additional
+Open-source status, willingness to collaborate, willingness to participate in implementation, additional comments.
 
 ## Public discovery
+Search, pagination, and filters by category, type, status, barangay, department, and year. Public detail includes summary, description, links, public attachments, proponent display identity per privacy settings, status timeline, endorsements, moderated comments, department response, and project milestones.
 
-Browse published proposals with search, pagination, and filters for:
-- Category
-- Proposal type
-- Status
-- Barangay
-- Department
-- Submission year
-
-Idea detail pages show summary, description, category, proponent display name (subject to privacy settings), supporting links, public attachments, current status, public status history, endorsements, comments, department response, and implementation milestones.
-
-## Status workflow
-
-Draft -> Submitted -> Under Review -> For Revision -> Submitted -> Under Review -> Approved -> In Progress -> Completed.
-
-Rejected and Archived are terminal/administrative outcomes. Administrators may reopen a proposal with a recorded reason. Enforce permitted transitions server-side; never trust a status supplied by a public client.
+## Workflow
+Draft -> Submitted -> Under Review -> For Revision -> Submitted -> Under Review -> Approved -> In Progress -> Completed. Rejected and Archived are closing outcomes. Reopening requires privileged permission and a recorded reason. Enforce transitions server-side in a transaction.
 
 ## Status definitions
-
 - Draft: saved but not submitted
 - Submitted: received and awaiting initial review
-- Under Review: being evaluated
-- For Revision: proposer action required
+- Under Review: assigned for evaluation
+- For Revision: proposer must add information
 - Approved: accepted for implementation or further development
 - In Progress: implementation started
-- Completed: project completed
-- Rejected: not accepted, with explanation
+- Completed: work complete
+- Rejected: declined with explanation
 - Archived: closed and retained
 
-## Community participation
-
-- Authenticated users may endorse a public proposal once.
-- Users may remove their endorsement.
-- Authenticated users may comment; comments support reporting and moderation.
-- Endorsements are expressions of support, not formal votes or evidence of legal/public consultation.
-- Provide moderation controls and anti-spam limits.
+## Community features
+Authenticated users may endorse once per idea and remove their endorsement. Comments require moderation/reporting tools and rate limits. Endorsements are expressions of support, not formal elections or legally sufficient consultation.
 
 ## Administration
-
 Roles:
-- Super Administrator: full control, role management, system configuration
-- Administrator: manage proposals, users, categories, departments, and reports
+- Super Administrator: all access, system configuration, role management
+- Administrator: manage proposals, users, categories, departments, reports
 - Department Reviewer: access assigned proposals and submit reviews
 - Evaluator: evaluate and recommend decisions
-- Read-only Auditor: read records and audit history
+- Read-only Auditor: view records and audit logs only
 
-Features:
-- Proposal queue and advanced filters
-- Assignment to department/reviewer
-- Review rubric and recommendations
-- Request revisions with a message
-- Approve/reject/archive with required remarks
-- Internal notes separate from public comments
-- Department responses and project milestones
-- User moderation
-- Category and department management
-- CSV/PDF reports and analytics
-- Audit log viewer
+Functions: triage queue; assign department/reviewer; request revisions; approve/reject/archive with remarks; review rubric; internal notes; public department responses; milestones; user moderation; categories/departments; reports; audit viewer.
 
-No public administrator registration. Bootstrap the first super administrator through a one-time secure CLI or deployment procedure.
+No public admin registration. First super-admin created using a one-time CLI or secure deployment procedure.
 
-## Reporting
+## Reporting and notifications
+Aggregate by year, barangay, category, proposal type, status, and department. Report review turnaround separately for open vs completed reviews. Notify users of receipt, revision requests, status changes, and completion. Persist notification records before asynchronous delivery and retry safely.
 
-Report counts and trends by year, category, barangay, proposal type, department, and status. Include review turnaround and completion measures. Define metrics carefully and avoid presenting elapsed time for still-open items as completed review time.
-
-## Notifications
-
-Email and in-app notifications for submission receipt, assignment where appropriate, revision request, status changes, reviewer comments, and completion. Notification delivery should be asynchronous and retryable.
-
-## Accessibility and privacy
-
-Use accessible forms, keyboard navigation, clear validation, responsive layout, privacy notices, account data export/deletion workflows where legally applicable, and retention policies. Provide privacy controls for proposer identity and contact details.
+## Privacy/accessibility
+Responsive accessible forms, keyboard navigation, explicit privacy notice and identity display controls. Keep private drafts and contact information out of public APIs. Define retention, export, and deletion policies.

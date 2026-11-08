@@ -1,95 +1,51 @@
 # Technical Architecture
 
-## Deployment target
+## Deployment
+- Public URL: ideas.bettersipocot.org
+- Hosting: Vercel or containerized Kubernetes
+- Kubernetes namespace: better-community
+- Primary DB: PostgreSQL (managed or operator-managed)
+- Cache/queue coordination: Redis (managed or in-cluster)
+- Files: AWS S3, Cloudflare R2, or Ceph RGW
 
-- Application: Next.js on Vercel or containerized Kubernetes
-- Domain: ideas.bettersipocot.org
-- Kubernetes namespace (if deployed in the BetterSipocot cluster): better-community
-- PostgreSQL: managed PostgreSQL or PostgreSQL operator
-- Redis: managed Redis/Upstash or in-cluster Redis
-- Object storage: AWS S3, Cloudflare R2, or Ceph RGW
+## Components
+1. Next.js public UI and admin UI
+2. Server-side Route Handlers/API services
+3. Authentication and RBAC
+4. PostgreSQL via Drizzle ORM (source of truth)
+5. Redis for cache, rate limits, and queue coordination
+6. Private S3-compatible attachment bucket
+7. Background worker for notifications, malware scanning, exports
+8. OpenAPI specification and Swagger UI
 
-Keep the application independently deployable while integrating with shared BetterSipocot identity and platform services where practical.
-
-## Logical components
-
-1. Next.js public site and administration interface
-2. Server-side API/Route Handlers
-3. Authentication and authorization layer
-4. PostgreSQL persistence through Drizzle ORM
-5. Redis cache, rate limiting, and job coordination
-6. S3-compatible private attachment storage
-7. Background worker for notifications, scanning, exports, and scheduled tasks
-8. OpenAPI specification and generated API documentation
-
-## Suggested source organization
-
+## Suggested source layout
 ```
 src/
-  app/
-    (public)/
-    (auth)/
-    dashboard/
-    admin/
-    api/v1/
-    docs/
+  app/(public)/ (auth)/ dashboard/ admin/ api/v1/ docs/
   components/
-  features/
-    ideas/
-    reviews/
-    departments/
-    notifications/
-    users/
-  lib/
-    auth/
-    db/
-    redis/
-    storage/
-    permissions/
-    validation/
-  server/
-    services/
-    repositories/
-drizzle/
-docs/
+  features/ideas reviews departments notifications users/
+  lib/auth db redis storage permissions validation/
+  server/services/ server/repositories/
+drizzle/ docs/ openapi/
 ```
 
-## Authentication
-
-Use Auth.js with OAuth providers for Google, GitHub, Microsoft Entra ID, Facebook, and X. Alternatively, use the existing shared Keycloak OIDC service as the single identity broker when configured.
-
-Store provider identity in an accounts table; support linking/unlinking accounts only after re-authentication and collision checks. Use secure, HTTP-only, SameSite cookies and production HTTPS. Validate OAuth state and PKCE where supported. Never expose provider client secrets to browser code.
+## Identity
+Auth.js with Google, GitHub, Microsoft Entra ID, Facebook, and X OAuth, or shared BetterSipocot Keycloak via OIDC. Store provider identities in accounts table. Account linking requires re-authentication and collision checks; never link solely by matching unverified email. Use OAuth state, PKCE where supported, HTTPS, secure HTTP-only SameSite cookies. Keep provider secrets server-side.
 
 ## Authorization
-
-Enforce RBAC on the server for every protected route and mutation. Scope department reviewers to assigned records. Auditors get read-only access. Verify ownership for draft edits and never rely on hidden UI controls as authorization.
+Server-side RBAC on every protected API and mutation. Proponents edit only their own drafts/revision-requested records. Department reviewers see assigned records only. Auditors are read-only. UI hiding is not authorization.
 
 ## PostgreSQL
-
-PostgreSQL is the source of truth. Use migrations, foreign keys, indexes, transactions for status transitions, and optimistic concurrency or row locking for simultaneous reviews.
+Source of truth. Use migrations, foreign keys, transactions, indexes, bounded connection pools, and row-level concurrency control for review/status changes.
 
 ## Redis
+Use for cache, rate limits, and queue coordination. Do not store the only copy of durable business state in Redis. Degrade safely on cache outage.
 
-Use Redis for:
-- Rate limits and abuse protection
-- Cache for public list/statistics queries
-- Background job queue coordination
-- Short-lived workflow coordination
-
-Do not use Redis as the durable source of truth. Ensure the app behaves safely when the cache is unavailable.
-
-## S3-compatible storage
-
-Store attachment metadata in PostgreSQL and object bytes in S3. Use opaque object keys, private buckets, server-generated presigned URLs, upload size/type limits, checksum verification, malware scanning, and lifecycle/retention policies. Never accept arbitrary bucket/key values from a client.
+## S3 object storage
+Keep metadata in PostgreSQL and bytes in S3. Private bucket, opaque object keys, short-lived server-generated presigned URLs, size/type/magic-byte checks, checksum validation, malware scanning, and retention policies. Do not accept arbitrary bucket/key paths from clients.
 
 ## Background jobs
+Use a durable outbox pattern (PostgreSQL) with a worker/queue (e.g. BullMQ + Redis). Retry transient failures with bounded backoff and dead-letter handling.
 
-Use a durable queue pattern (for example, a PostgreSQL-backed outbox plus Redis/BullMQ worker). Record notifications in PostgreSQL before delivery. Retry transient errors with bounded backoff and dead-letter handling.
-
-## API documentation
-
-Maintain an OpenAPI 3 specification. Serve interactive Swagger UI at /docs. Document authentication, authorization requirements, pagination, errors, and rate limits. Do not expose administrative schemas or data through public endpoints.
-
-## Observability
-
-Provide structured logs with request IDs, health/readiness endpoints, metrics for request latency/error rate, job queue depth, database/Redis connectivity, object-storage errors, and notification delivery. Avoid logging tokens, secrets, personal data, or full proposal contents.
+## API and observability
+OpenAPI 3 served at /docs. Include auth schemes, role constraints, pagination, and error responses. Provide health/readiness endpoints, structured logs, request IDs, metrics for latency/errors, queue lag, DB pool, Redis, S3 failures, and notification delivery. Redact secrets, tokens, PII, and proposal contents from logs.

@@ -1,76 +1,53 @@
 # API Plan
 
-Base path: /api/v1
+Base path: /api/v1. JSON responses, consistent errors, bounded pagination, and role-aware schemas. Public APIs expose published records only.
 
-All APIs return JSON and use consistent error envelopes. Use cursor or page-based pagination with bounded page sizes. Public endpoints must return only published/public fields.
-
-## Public endpoints
-
+## Public
 | Method | Route | Purpose |
 |---|---|---|
-| GET | /ideas | Browse public proposals |
-| GET | /ideas/:slug | View public proposal |
-| GET | /categories | List active categories |
+| GET | /ideas | Browse/search/filter public proposals |
+| GET | /ideas/:slug | Public proposal detail |
+| GET | /categories | Active categories |
 | GET | /statuses | Status legend |
-| GET | /departments | Public department list |
-| GET | /barangays | List target barangays |
-| GET | /statistics | Public aggregate statistics |
+| GET | /departments | Public departments |
+| GET | /barangays | Barangays |
+| GET | /statistics | Public aggregates |
 
-## Authenticated endpoints
-
+## Authenticated
 | Method | Route | Purpose |
 |---|---|---|
 | POST | /ideas | Create draft |
-| PATCH | /ideas/:id | Update own draft/revision |
+| PATCH | /ideas/:id | Edit own draft/revision |
 | POST | /ideas/:id/submit | Submit proposal |
-| GET | /me/ideas | List own proposals |
+| GET | /me/ideas | Own proposals |
 | POST | /ideas/:id/support | Endorse |
 | DELETE | /ideas/:id/support | Remove endorsement |
-| POST | /ideas/:id/comments | Add comment |
+| POST | /ideas/:id/comments | Comment |
 | POST | /uploads/presign | Request constrained upload URL |
 
-## Administration endpoints
-
+## Administration
 | Method | Route | Purpose |
 |---|---|---|
 | GET | /admin/ideas | Review queue |
 | GET | /admin/ideas/:id | Administrative detail |
-| PATCH | /admin/ideas/:id/status | Change status |
-| POST | /admin/ideas/:id/assignments | Assign department/reviewer |
-| POST | /admin/ideas/:id/reviews | Record evaluation |
-| POST | /admin/ideas/:id/notes | Add internal note |
+| PATCH | /admin/ideas/:id/status | Status transition |
+| POST | /admin/ideas/:id/assignments | Assign reviewer/department |
+| POST | /admin/ideas/:id/reviews | Evaluation |
+| POST | /admin/ideas/:id/notes | Internal note |
 | POST | /admin/ideas/:id/response | Publish department response |
 | GET | /admin/reports | Reports |
-| CRUD | /admin/categories | Manage categories |
-| CRUD | /admin/departments | Manage departments |
-| GET | /admin/audit-logs | Audit records |
+| CRUD | /admin/categories | Category management |
+| CRUD | /admin/departments | Department management |
+| GET | /admin/audit-logs | Audit history |
 
-## Status endpoint payload
-
+## Status transition example
 ```json
-{
-  "status": "under_review",
-  "remarks": "Initial evaluation started.",
-  "visibility": "public"
-}
+{ "status": "under_review", "remarks": "Initial evaluation started.", "visibility": "public" }
 ```
+Actor identity comes from the server session. Never accept actor IDs from client payloads. Validate allowed transitions on the server and write history/audit atomically.
 
-The server determines the acting administrator from the authenticated session. Clients cannot set actor IDs or bypass transition rules.
-
-## Error format
-
+Error envelope:
 ```json
-{
-  "error": {
-    "code": "VALIDATION_ERROR",
-    "message": "The proposal contains invalid fields.",
-    "details": []
-  }
-}
+{ "error": { "code": "VALIDATION_ERROR", "message": "Invalid fields.", "details": [] } }
 ```
-
-Use appropriate HTTP status codes: 400 validation, 401 unauthenticated, 403 unauthorized, 404 not found, 409 conflict, 413 upload too large, 429 rate limited, and 500 unexpected error.
-
-## OpenAPI
-
-Keep the OpenAPI 3 document versioned in the repository (planned: openapi/openapi.yaml) and expose Swagger UI at /docs. Include schemas, pagination, security schemes, examples, and role requirements. Never publish secret-bearing or internal-only endpoints.
+Use 400, 401, 403, 404, 409, 413, 429, and 500 appropriately. Version an OpenAPI 3 file at openapi/openapi.yaml and render Swagger UI at /docs.

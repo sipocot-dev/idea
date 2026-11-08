@@ -1,64 +1,18 @@
 # Implementation Roadmap
 
-## Phase 1 — Foundation
-- Next.js + TypeScript app scaffold
-- Bootstrap 5 layout and design system
-- PostgreSQL connection and Drizzle schema/migrations
-- Redis connection and health checks
-- Environment validation and local development setup
-- CI checks: lint, typecheck, unit tests, build
-
-## Phase 2 — Authentication and user profiles
-- Auth.js or shared Keycloak OIDC
-- Google, GitHub, Microsoft, Facebook, and X providers
-- Profile and account linking
-- Secure bootstrap super-admin command
-- RBAC middleware and tests
-
-## Phase 3 — Proposal lifecycle
-- Create/edit drafts
-- Submission validation
-- Categories, barangays, departments
-- GitHub and external link fields
-- S3 presigned attachments and malware scanning
-- Submission confirmation
-
-## Phase 4 — Public portal
-- Browse/search/filter/paginate proposals
-- Detail pages and status legends
-- Public status timeline
-- Published projects and policy proposals
-- Accessibility and responsive design
-
-## Phase 5 — Administration and evaluation
-- Admin dashboard and review queue
-- Assign reviewers/departments
-- Review rubric and recommendations
-- Revision requests
-- Status transition workflow
-- Internal notes and public department responses
-- Audit logs
-
-## Phase 6 — Community features
-- Endorsements
-- Comments and moderation
-- Notifications and email queue
-- Project milestones and progress updates
-
-## Phase 7 — Reporting and operations
-- CSV/PDF reports
-- Analytics by category, barangay, department, year, and status
-- Scheduled encrypted PostgreSQL backups to S3
-- Restore tests
-- Observability and production readiness review
+1. Foundation: Next.js/TypeScript, Bootstrap 5, Drizzle, PostgreSQL, Redis, config validation, CI.
+2. Identity: Auth.js or shared Keycloak OIDC, five OAuth providers, profiles, account linking, super-admin bootstrap, RBAC tests.
+3. Submission lifecycle: drafts, form validation, categories/barangays/departments, external URLs, S3 uploads/scanning.
+4. Public portal: browse, search/filter, details, status legends/timeline, project and policy views, accessibility.
+5. Admin: queues, reviewer assignment, rubric, revision requests, status workflow, internal notes, responses, audit log.
+6. Community: endorsements, moderated comments, milestones, notifications.
+7. Operations: CSV/PDF reports, encrypted scheduled backups, restore tests, observability, production readiness.
 
 ## Definition of done
-
-- All protected routes have server-side authorization tests.
-- Status transitions are transactional and auditable.
-- Draft and private data cannot leak through public APIs.
-- OAuth secrets and S3 credentials are never exposed to client bundles.
-- Upload validation and malware scanning are enforced.
-- Database migrations are repeatable.
-- CI passes lint, typecheck, tests, and production build.
-- Backup restoration is tested and documented.
+- Authorization tests for every protected route.
+- Transactional, auditable status transitions.
+- No leakage of drafts, private attachments, or contact data.
+- OAuth/S3 secrets absent from client bundles and source control.
+- Upload validation and malware scanning enforced.
+- Repeatable migrations and CI for lint/typecheck/tests/build.
+- Successful documented backup restoration test.
