@@ -1,0 +1,18 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: ideas
+  namespace: better-community
+spec:
+  ingressClassName: emissary
+  rules:
+    - host: ideas.bettersipocot.org
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: ideas
+                port:
+                  number: 80

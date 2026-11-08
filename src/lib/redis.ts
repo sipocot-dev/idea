@@ -1,0 +1,2 @@
+import Redis from "ioredis"; const g=globalThis as unknown as {redis?:Redis}; export const redis=g.redis??new Redis(process.env.REDIS_URL??"redis://localhost:6379",{maxRetriesPerRequest:2,lazyConnect:true}); if(process.env.NODE_ENV!=="production")g.redis=redis;
+export async function rateLimit(key:string,limit=10,seconds=60){try{if(redis.status==="wait")await redis.connect();const n=await redis.incr(key);if(n===1)await redis.expire(key,seconds);return{allowed:n<=limit,remaining:Math.max(0,limit-n)};}catch{return{allowed:false,remaining:0,unavailable:true};}}

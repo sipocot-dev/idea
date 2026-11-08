@@ -1,0 +1,1 @@
+export default function DocsPage(){return <><h1 className="fw-bold">API documentation</h1><p className="muted">Initial API endpoint: <code>GET /api/v1/ideas</code>. OpenAPI 3 specification and Swagger UI are scheduled for the API hardening milestone.</p><pre className="bg-white border rounded p-3"><code>curl https://ideas.bettersipocot.org/api/v1/ideas</code></pre></>;}

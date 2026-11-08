@@ -1,0 +1,58 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ideas
+  namespace: better-community
+  labels:
+    app.kubernetes.io/name: ideas
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: ideas
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: ideas
+    spec:
+      containers:
+        - name: app
+          image: ghcr.io/sipocot-dev/idea:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http
+              containerPort: 3000
+          envFrom:
+            - secretRef:
+                name: ideas-app
+          env:
+            - name: NODE_ENV
+              value: production
+            - name: AUTH_URL
+              value: https://ideas.bettersipocot.org
+            - name: APP_URL
+              value: https://ideas.bettersipocot.org
+          readinessProbe:
+            httpGet:
+              path: /api/health
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /api/health
+              port: http
+            initialDelaySeconds: 20
+            periodSeconds: 20
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              cpu: "1"
+              memory: 1Gi
+          securityContext:
+            allowPrivilegeEscalation: false
+            runAsNonRoot: true
+            capabilities:
+              drop: ["ALL"]
