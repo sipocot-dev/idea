@@ -15,6 +15,8 @@ export async function toggleSupport(formData: FormData) {
   if (!ideaId || !slug) throw new Error("Invalid proposal.");
   const [idea] = await db.select({ id: ideas.id }).from(ideas).where(and(eq(ideas.id, ideaId), eq(ideas.slug, slug), eq(ideas.visibility, "public"))).limit(1);
   if (!idea) throw new Error("Proposal not found.");
+  const [owner] = await db.select({ proposerId: ideas.proposerId }).from(ideas).where(eq(ideas.id,ideaId)).limit(1);
+  if(owner?.proposerId===userId) throw new Error("You cannot support your own proposal.");
   const [existing] = await db.select({ userId: ideaSupporters.userId }).from(ideaSupporters).where(and(eq(ideaSupporters.ideaId, ideaId), eq(ideaSupporters.userId, userId))).limit(1);
   if (existing) await db.delete(ideaSupporters).where(and(eq(ideaSupporters.ideaId, ideaId), eq(ideaSupporters.userId, userId)));
   else { await db.insert(ideaSupporters).values({ ideaId, userId }).onConflictDoNothing(); await db.insert(userPoints).values({userId,eventKey:`support:${ideaId}`,points:1,reason:"Supported a community proposal"}).onConflictDoNothing(); }
@@ -31,6 +33,18 @@ export async function requestCollaboration(fd: FormData) {
   if(!idea||!idea.willingToCollaborate||idea.proposerId===userId) throw new Error("This proposal is not accepting collaboration requests.");
   await db.insert(ideaCollaborators).values({ideaId,userId,message}).onConflictDoNothing();
   revalidatePath(`/ideas/${slug}`); revalidatePath("/profile");
+}
+export async function reviewCollaboration(fd: FormData) {
+  const session=await auth(); const userId=session?.user?.id; if(!userId||!session.user.isActive) redirect("/login");
+  const requestId=String(fd.get("requestId")??""); const slug=String(fd.get("slug")??""); const decision=String(fd.get("decision")??"");
+  if(!["accepted","declined"].includes(decision)) throw new Error("Invalid collaboration decision.");
+  const [request]=await db.select({ideaId:ideaCollaborators.ideaId,userId:ideaCollaborators.userId}).from(ideaCollaborators).where(and(eq(ideaCollaborators.id,requestId),eq(ideaCollaborators.status,"pending"))).limit(1);
+  if(!request) throw new Error("Request not found.");
+  const [idea]=await db.select({proposerId:ideas.proposerId}).from(ideas).where(and(eq(ideas.id,request.ideaId),eq(ideas.slug,slug))).limit(1);
+  if(!idea||idea.proposerId!==userId) throw new Error("Only the proposal owner can review collaboration requests.");
+  await db.update(ideaCollaborators).set({status:decision,updatedAt:new Date()}).where(eq(ideaCollaborators.id,requestId));
+  if(decision==="accepted") await db.insert(userPoints).values({userId:request.userId,eventKey:`collaboration-accepted:${request.ideaId}`,points:5,reason:"Accepted as a project collaborator"}).onConflictDoNothing();
+  revalidatePath(`/ideas/${slug}`); revalidatePath("/my-ideas"); revalidatePath("/profile");
 }
 export async function publishProgress(fd: FormData) {
   const session=await auth(); const userId=session?.user?.id;
