@@ -2,14 +2,17 @@ import Link from "next/link";
 import { db } from "@/lib/db";
 import { ideas, users, categories, ideaSupporters } from "@/lib/db/schema";
 import { desc, eq, and, ilike, sql } from "drizzle-orm";
-import ProjectCategoryLegend from "@/components/project-category-legend";\nimport CategoryIcon from "@/components/category-icon";
+import ProjectCategoryLegend from "@/components/project-category-legend";
+import CategoryIcon from "@/components/category-icon";
 
 const labels: Record<string,string> = { draft:"Draft", submitted:"Submitted", under_review:"Under Review", for_revision:"For Revision", approved:"Approved", in_progress:"In Progress", completed:"Completed", rejected:"Rejected", archived:"Archived" };
 const statusGuide = [["submitted","Submitted","Awaiting initial review"],["under_review","Under Review","Being evaluated"],["for_revision","For Revision","Proposer action required"],["approved","Approved","Accepted for development"],["in_progress","In Progress","Implementation started"],["completed","Completed","Work completed"],["rejected","Rejected","Not accepted; reason recorded"],["archived","Archived","Closed and retained"]];
 const sortOptions = [{value:"recent",label:"Recently added"},{value:"supported",label:"Most supported"},{value:"unsupported",label:"Least supported"},{value:"visited",label:"Most visited"}];
 
 export default async function IdeasPage({ searchParams }: { searchParams: Promise<{ q?:string; sort?:string; category?:string }> }) {
-  const { q="", sort="recent", category="" } = await searchParams;\n  const categoryRows = await db.select({id:categories.id,name:categories.name,slug:categories.slug}).from(categories).where(eq(categories.active,true)).orderBy(categories.displayOrder);\n  const selectedCategory=categoryRows.find(c=>c.slug===category);
+  const { q="", sort="recent", category="" } = await searchParams;
+  const categoryRows = await db.select({id:categories.id,name:categories.name,slug:categories.slug}).from(categories).where(eq(categories.active,true)).orderBy(categories.displayOrder);
+  const selectedCategory=categoryRows.find(c=>c.slug===category);
   const supportCount = sql<number>`(select count(*)::int from idea_supporters where idea_id = ${ideas.id})`;
   const order = sort === "supported" ? [desc(supportCount), desc(ideas.createdAt)] : sort === "unsupported" ? [supportCount, desc(ideas.createdAt)] : sort === "visited" ? [desc(ideas.viewCount), desc(ideas.createdAt)] : [desc(ideas.createdAt)];
   const rows = await db.select({ id:ideas.id, slug:ideas.slug, title:ideas.title, summary:ideas.summary, status:ideas.status, type:ideas.type, createdAt:ideas.createdAt, proposer:users.name, categoryName:categories.name, views:ideas.viewCount, supporters:supportCount }).from(ideas).leftJoin(users,eq(ideas.proposerId,users.id)).leftJoin(categories,eq(ideas.categoryId,categories.id)).where(and(eq(ideas.visibility,"public"),q?ilike(ideas.title,`%${q}%`):undefined,selectedCategory?eq(ideas.categoryId,selectedCategory.id):undefined)).orderBy(...order).limit(50);
