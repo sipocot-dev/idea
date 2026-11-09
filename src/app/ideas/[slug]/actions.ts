@@ -3,7 +3,7 @@ import { auth } from "@/auth";
 import { db } from "@/lib/db";
 import { ideaSupporters, ideas, ideaCollaborators, ideaProgressUpdates } from "@/lib/db/schema";
 import { and, eq } from "drizzle-orm";
-import { revalidatePath } from "next/cache";\nimport { awardVerifiedPoints } from "@/lib/gamification";
+import { revalidatePath } from "next/cache";\nimport { awardVerifiedPoints } from "@/lib/gamification";\nimport { rateLimit } from "@/lib/redis";
 import { redirect } from "next/navigation";
 
 export async function toggleSupport(formData: FormData) {
