@@ -49,6 +49,7 @@ export async function reviewCollaboration(fd: FormData) {
 export async function publishProgress(fd: FormData) {
   const session=await auth(); const userId=session?.user?.id;
   if(!userId||!session.user.isActive) redirect("/login");
+  const limit=await rateLimit(`progress:${userId}`,3,86400);if(!limit.allowed)throw new Error("Progress update limit reached. You can publish up to three updates per day.");
   const ideaId=String(fd.get("ideaId")??""); const slug=String(fd.get("slug")??"");
   const title=String(fd.get("title")??"").trim(); const body=String(fd.get("body")??"").trim();
   const raw=String(fd.get("percentComplete")??""); const percent=raw===""?null:Number(raw);
