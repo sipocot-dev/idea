@@ -7,7 +7,7 @@ db.select({n:sql<number>`count(*)::int`}).from(ideaSupporters).where(eq(ideaSupp
 db.select({n:sql<number>`count(*)::int`}).from(ideaCollaborators).where(and(eq(ideaCollaborators.userId,uid),eq(ideaCollaborators.status,"accepted"))),
 db.select({n:sql<number>`coalesce(sum(points),0)::int`}).from(userPoints).where(eq(userPoints.userId,uid)),
 db.select().from(userBadges).where(eq(userBadges.userId,uid)),
-db.select({month:sql<string>`to_char(date_trunc('month',created_at),'Mon')`,n:sql<number>`count(*)::int`}).from(userPoints).where(eq(userPoints.userId,uid)).groupBy(sql`date_trunc('month',created_at)`).orderBy(sql`date_trunc('month',created_at)`).limit(6)
+db.select({month:sql<string>`to_char(date_trunc('month',created_at),'Mon YY')`,n:sql<number>`coalesce(sum(points),0)::int`}).from(userPoints).where(eq(userPoints.userId,uid)).groupBy(sql`date_trunc('month',created_at)`).orderBy(sql`date_trunc('month',created_at)`).limit(6)
 ]);
 const max=Math.max(1,...monthly.map(x=>x.n));const initials=(u.name??u.email??"U").split(/\s+/).map(x=>x[0]).join("").slice(0,2).toUpperCase();
 return <div className="profile-dashboard"><div className="card p-4 mb-3"><div className="d-flex align-items-center gap-3"><div className={`profile-avatar avatar-${avatarStyle}`}>{avatarStyle==="letter"?initials.slice(0,1):avatarStyle==="notion"?"◉":avatarStyle==="geometric"?"◇":avatarStyle==="minimal"?"●":initials}</div><div><span className="eyebrow text-primary">COMMUNITY PROFILE</span><h1 className="h3 fw-bold mb-0">{u.name??"Community member"}</h1><p className="muted mb-0">Member since {new Date(u.createdAt).toLocaleDateString()}</p></div></div></div>
