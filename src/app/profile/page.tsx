@@ -1,10 +1,10 @@
-import {auth} from "@/auth";import {redirect} from "next/navigation";import {db} from "@/lib/db";import {users,ideas,ideaSupporters,ideaCollaborators,userPoints,userBadges} from "@/lib/db/schema";import {eq,sql,desc} from "drizzle-orm";import Link from "next/link";
+import {auth} from "@/auth";import {redirect} from "next/navigation";import {db} from "@/lib/db";import {users,ideas,ideaSupporters,ideaCollaborators,userPoints,userBadges} from "@/lib/db/schema";import {eq,sql,and} from "drizzle-orm";import Link from "next/link";
 const badgeInfo:Record<string,{label:string;rule:string}>={first_idea:{label:"Idea Starter",rule:"First proposal submitted"},first_support:{label:"Community Voice",rule:"First proposal supported"},trusted_collaborator:{label:"Trusted Collaborator",rule:"First collaboration accepted"},impact_25:{label:"Community Builder",rule:"Earn 25 verified impact points"}};
 export default async function ProfilePage(){const s=await auth();if(!s?.user?.id)redirect("/login");const uid=s.user.id;const [u]=await db.select().from(users).where(eq(users.id,uid)).limit(1);if(!u)redirect("/login");
 const [own,sponsored,collab,points,badges,monthly]=await Promise.all([
 db.select({n:sql<number>`count(*)::int`}).from(ideas).where(eq(ideas.proposerId,uid)),
 db.select({n:sql<number>`count(*)::int`}).from(ideaSupporters).where(eq(ideaSupporters.userId,uid)),
-db.select({n:sql<number>`count(*)::int`}).from(ideaCollaborators).where(eq(ideaCollaborators.userId,uid)).where(eq(ideaCollaborators.status,"accepted")),
+db.select({n:sql<number>`count(*)::int`}).from(ideaCollaborators).where(and(eq(ideaCollaborators.userId,uid),eq(ideaCollaborators.status,"accepted")),
 db.select({n:sql<number>`coalesce(sum(points),0)::int`}).from(userPoints).where(eq(userPoints.userId,uid)),
 db.select().from(userBadges).where(eq(userBadges.userId,uid)),
 db.select({month:sql<string>`to_char(date_trunc('month',created_at),'Mon')`,n:sql<number>`count(*)::int`}).from(userPoints).where(eq(userPoints.userId,uid)).groupBy(sql`date_trunc('month',created_at)`).orderBy(sql`date_trunc('month',created_at)`).limit(6)
