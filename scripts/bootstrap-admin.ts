@@ -12,4 +12,4 @@ const [existing]=await db.select({id:users.id}).from(users).where(eq(users.email
 if(existing)await db.update(users).set({name,passwordHash,role:"super_admin",isActive:true,emailVerified:new Date(),updatedAt:new Date()}).where(eq(users.id,existing.id));
 else await db.insert(users).values({id:randomUUID(),name,email,passwordHash,role:"super_admin",isActive:true,emailVerified:new Date()});
 console.log("\nSuper administrator provisioned. Save this password now; it will not be shown again.\n");console.log(`Email: ${email}\nTemporary password: ${password}\n`);
-await db.$client.end();
+process.exit(0);
