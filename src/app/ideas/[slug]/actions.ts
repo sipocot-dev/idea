@@ -1,9 +1,9 @@
 "use server";
 import { auth } from "@/auth";
 import { db } from "@/lib/db";
-import { ideaSupporters, ideas, ideaCollaborators, ideaProgressUpdates, userPoints } from "@/lib/db/schema";
+import { ideaSupporters, ideas, ideaCollaborators, ideaProgressUpdates } from "@/lib/db/schema";
 import { and, eq } from "drizzle-orm";
-import { revalidatePath } from "next/cache";
+import { revalidatePath } from "next/cache";\nimport { awardVerifiedPoints } from "@/lib/gamification";
 import { redirect } from "next/navigation";
 
 export async function toggleSupport(formData: FormData) {
@@ -19,7 +19,7 @@ export async function toggleSupport(formData: FormData) {
   if(owner?.proposerId===userId) throw new Error("You cannot support your own proposal.");
   const [existing] = await db.select({ userId: ideaSupporters.userId }).from(ideaSupporters).where(and(eq(ideaSupporters.ideaId, ideaId), eq(ideaSupporters.userId, userId))).limit(1);
   if (existing) await db.delete(ideaSupporters).where(and(eq(ideaSupporters.ideaId, ideaId), eq(ideaSupporters.userId, userId)));
-  else { await db.insert(ideaSupporters).values({ ideaId, userId }).onConflictDoNothing(); await db.insert(userPoints).values({userId,eventKey:`support:${ideaId}`,points:1,reason:"Supported a community proposal"}).onConflictDoNothing(); }
+  else { await db.insert(ideaSupporters).values({ ideaId, userId }).onConflictDoNothing(); await awardVerifiedPoints(userId,`support:${ideaId}`,1,"Supported a community proposal"); }
   revalidatePath(`/ideas/${slug}`);
   revalidatePath("/ideas");
 }
@@ -43,7 +43,7 @@ export async function reviewCollaboration(fd: FormData) {
   const [idea]=await db.select({proposerId:ideas.proposerId}).from(ideas).where(and(eq(ideas.id,request.ideaId),eq(ideas.slug,slug))).limit(1);
   if(!idea||idea.proposerId!==userId) throw new Error("Only the proposal owner can review collaboration requests.");
   await db.update(ideaCollaborators).set({status:decision,updatedAt:new Date()}).where(eq(ideaCollaborators.id,requestId));
-  if(decision==="accepted") await db.insert(userPoints).values({userId:request.userId,eventKey:`collaboration-accepted:${request.ideaId}`,points:5,reason:"Accepted as a project collaborator"}).onConflictDoNothing();
+  if(decision==="accepted") await awardVerifiedPoints(request.userId,`collab:${request.ideaId}`,5,"Accepted as a project collaborator");
   revalidatePath(`/ideas/${slug}`); revalidatePath("/my-ideas"); revalidatePath("/profile");
 }
 export async function publishProgress(fd: FormData) {
@@ -56,6 +56,6 @@ export async function publishProgress(fd: FormData) {
   const [idea]=await db.select({id:ideas.id,proposerId:ideas.proposerId}).from(ideas).where(and(eq(ideas.id,ideaId),eq(ideas.slug,slug))).limit(1);
   const [collab]=await db.select({id:ideaCollaborators.id}).from(ideaCollaborators).where(and(eq(ideaCollaborators.ideaId,ideaId),eq(ideaCollaborators.userId,userId),eq(ideaCollaborators.status,"accepted"))).limit(1);
   if(!idea||(idea.proposerId!==userId&&!collab)) throw new Error("Only the proposer or accepted collaborators can publish updates.");
-  await db.insert(ideaProgressUpdates).values({ideaId,authorId:userId,title,body,percentComplete:percent,milestone:String(fd.get("milestone")??"").trim()||null,visibility:"public"});
+  const [update]=await db.insert(ideaProgressUpdates).values({ideaId,authorId:userId,title,body,percentComplete:percent,milestone:String(fd.get("milestone")??"").trim()||null,visibility:"public"}).returning({id:ideaProgressUpdates.id});\n  await awardVerifiedPoints(userId,`progress:${update.id}`,2,"Published a project progress update");
   revalidatePath(`/ideas/${slug}`); revalidatePath("/my-ideas");
 }
