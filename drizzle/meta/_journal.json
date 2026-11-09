@@ -36,6 +36,13 @@
       "when": 1794528000001,
       "tag": "0004_collaboration_progress_gamification",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1794528000002,
+      "tag": "0005_sample_progress_updates",
+      "breakpoints": true
     }
   ]
 }
