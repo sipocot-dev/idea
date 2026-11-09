@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";\nimport Link from "next/link";
+import { useState } from "react";
 
 const groups = [
   { name: "Infrastructure", color: "#ef4444", icon: "🏗️", examples: "Roads, bridges, drainage, public facilities" },
