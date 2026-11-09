@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { db } from "@/lib/db";
-import { ideas, users, categories } from "@/lib/db/schema";
+import { ideas, users, categories, ideaSupporters } from "@/lib/db/schema";
 import { desc, eq, and, ilike, sql } from "drizzle-orm";
 import ProjectCategoryLegend from "@/components/project-category-legend";
 
@@ -14,7 +14,7 @@ export default async function IdeasPage({ searchParams }: { searchParams: Promis
   const order = sort === "supported" ? [desc(supportCount), desc(ideas.createdAt)] : sort === "unsupported" ? [supportCount, desc(ideas.createdAt)] : sort === "visited" ? [desc(ideas.viewCount), desc(ideas.createdAt)] : [desc(ideas.createdAt)];
   const rows = await db.select({ id:ideas.id, slug:ideas.slug, title:ideas.title, summary:ideas.summary, status:ideas.status, type:ideas.type, createdAt:ideas.createdAt, proposer:users.name, categoryName:categories.name, views:ideas.viewCount, supporters:supportCount }).from(ideas).leftJoin(users,eq(ideas.proposerId,users.id)).leftJoin(categories,eq(ideas.categoryId,categories.id)).where(and(eq(ideas.visibility,"public"),q?ilike(ideas.title,`%${q}%`):undefined)).orderBy(...order).limit(50);
   const [totals] = await db.select({ projects:sql<number>`count(*)::int`, views:sql<number>`coalesce(sum(view_count),0)::int` }).from(ideas).where(eq(ideas.visibility,"public"));
-  const [supportTotals] = await db.select({ supporters:sql<number>`count(*)::int` }).from(sql`(select distinct user_id from idea_supporters) as distinct_supporters`);
+  const [supportTotals] = await db.select({ supporters:sql<number>`count(distinct user_id)::int` }).from(ideaSupporters);
   return <>
     <section className="ideas-hero mb-4">
       <div className="ideas-hero-content"><span className="eyebrow">BETTERSIPOCOT · COMMUNITY IDEAS</span><h1>Good ideas start<br/><span>with our community.</span></h1><p>Discover local proposals, show your support, and help shape projects that make Sipocot better.</p><div className="d-flex flex-wrap gap-2"><Link className="btn btn-light btn-lg" href="/submit">Share an idea <span aria-hidden="true">→</span></Link><Link className="btn btn-outline-light btn-lg" href="#browse">Explore projects</Link></div></div>
