@@ -47,13 +47,13 @@ Vercel uses `vercel-build` to apply Drizzle migrations before building. Set dire
 The account must sign in once with an enabled OAuth provider. Then run from a trusted operator environment:
 npm run admin:bootstrap -- admin@example.com "System Administrator"\n\nThe command creates or promotes the account to `super_admin`, generates a cryptographically random password, and prints it once. Store it in a password manager and sign in at `/login`. Do not commit the generated password.
 
-There is no public administrator registration.
+There is no public administrator registration. Bootstrap a single initial administrator from a trusted environment with database access. The command generates a high-entropy password and prints it once; immediately store it in a password manager. For Vercel, use `vercel env pull .env.local` in a trusted workstation before running the command.
 
 ## OAuth callback URLs
 https://ideas.bettersipocot.org/api/auth/callback/{provider}
 Local: http://localhost:3000/api/auth/callback/{provider}
 
-Provider IDs: google, github, microsoft-entra-id, facebook, twitter.
+Provider IDs: google, github, microsoft-entra-id, facebook, twitter. Configure each provider's client ID and secret in Vercel. Social login buttons appear only when both values are set.\n\n## Staff roles and invitations\nAdministrators invite users from `/admin/users`; the invited person receives a time-limited link to set their password. Assign only the minimum role required. Department reviewers and evaluators see proposals assigned to their account and can add private internal review notes. Municipal representatives have the same assigned-proposal visibility. Community moderators can hide or restore comments. Auditors have read-only access to audit events. Only a super administrator can grant the super administrator role.\n\nEmail verification for public signup is optional and controlled by `REQUIRE_EMAIL_VERIFICATION`. Set it to `true` and configure Resend to send verification emails. Staff invitations always require the recipient to use the emailed invitation link to set a password.
 
 ## Routes
 - / — public landing page and proposal counters
