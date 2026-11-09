@@ -7,13 +7,13 @@ Next.js application for community ideas, projects, and policy proposals.
 
 ## Stack
 - Next.js App Router, TypeScript, Bootstrap 5
-- Auth.js OAuth providers: Google, GitHub, Microsoft Entra ID, Facebook, X
+- Auth.js credentials and OAuth providers: Google, GitHub, Microsoft Entra ID, Facebook, X
 - Prisma Postgres with Drizzle ORM
 - Upstash Redis REST API for rate limiting
 - File storage, images, and attachments are deferred to the final feature milestone
 
 ## Implemented
-- Public landing page, proposal listing and detail pages
+- Public landing page, proposal listing and detail pages\n- Email/password registration and login; optional email verification through Resend\n- OAuth login with Google, GitHub, Facebook, X (Twitter), and Microsoft Entra ID\n- Role-based access control and administrator-managed staff invitations\n- Markdown authoring and sanitized Markdown rendering
 - Authenticated proposal submission and personal submission list
 - Admin proposal queue, reviewer assignment, controlled status transitions, and audit history
 - Category CRUD with 15 seeded community categories
@@ -41,11 +41,11 @@ Never commit .env.local or production credentials. The read-only Upstash token i
 5. Apply the committed migration: npm run db:migrate.
 6. Start Next.js: npm run dev.
 
-Vercel uses `vercel-build` to apply Drizzle migrations before building. Set direct `DATABASE_URL` for migrations and pooled `DATABASE_URL_POOLED` for runtime.
+Vercel uses `vercel-build` to apply Drizzle migrations before building. Set direct `DATABASE_URL` for migrations and pooled `DATABASE_URL_POOLED` for runtime. When `REQUIRE_EMAIL_VERIFICATION=true`, configure `RESEND_API_KEY` and a verified `RESEND_FROM_EMAIL`.
 
 ## First administrator
 The account must sign in once with an enabled OAuth provider. Then run from a trusted operator environment:
-npm run admin:grant -- admin@example.com
+npm run admin:bootstrap -- admin@example.com "System Administrator"\n\nThe command creates or promotes the account to `super_admin`, generates a cryptographically random password, and prints it once. Store it in a password manager and sign in at `/login`. Do not commit the generated password.
 
 There is no public administrator registration.
 
@@ -61,7 +61,7 @@ Provider IDs: google, github, microsoft-entra-id, facebook, twitter.
 - /ideas/[slug] — proposal detail and public status history
 - /submit — authenticated proposal submission
 - /my-ideas — current user's submissions
-- /admin — administrator review queue
+- /admin — administrator review queue\n- /admin/users — invite users, assign roles, activate/deactivate accounts\n- /workspace — staff workspace for assigned proposals and audit visibility\n- /register — public account registration\n- /verify-email — optional email verification\n- /accept-invite — staff invitation acceptance
 - /api/v1/ideas — public JSON endpoint
 - /api/health — PostgreSQL health check
 
